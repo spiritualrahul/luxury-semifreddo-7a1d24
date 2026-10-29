@@ -240,6 +240,15 @@ function numberValue(value) {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
+function fitAmountSize(element, formattedText) {
+  element.classList.remove("text-sm-fit", "text-xs-fit");
+  if (formattedText.length >= 14) {
+    element.classList.add("text-xs-fit");
+  } else if (formattedText.length >= 10) {
+    element.classList.add("text-sm-fit");
+  }
+}
+
 function inputValue(input) {
   if (input.type === "checkbox") return input.checked;
   if (input.type === "number") return numberValue(input.value);
@@ -334,8 +343,13 @@ function renderPreview() {
   setText("pAdvance", `- ${currency.format(t.advance)}`);
   byId("pAdvanceRow").classList.toggle("hidden", !t.advance);
   setText("pDueAmount", currency.format(t.dueAmount));
-  setText("pHeroTotal", currency.format(t.finalTotal));
-  setText("pHeroDue", currency.format(t.dueAmount));
+  fitAmountSize(byId("pDueAmount"), currency.format(t.dueAmount));
+  const heroTotalText = currency.format(t.finalTotal);
+  const heroDueText = currency.format(t.dueAmount);
+  setText("pHeroTotal", heroTotalText);
+  fitAmountSize(byId("pHeroTotal"), heroTotalText);
+  setText("pHeroDue", heroDueText);
+  fitAmountSize(byId("pHeroDue"), heroDueText);
 
   toggleText("pNotesWrap", "pNotes", state.notes);
   renderSignature();

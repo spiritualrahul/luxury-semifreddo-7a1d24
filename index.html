@@ -92,14 +92,18 @@
       .pdf-mode .project-copy,
       .pdf-mode .notes-copy,
       .pdf-mode .bank-copy { font-size: 12px; line-height: 1.45; }
-      .pdf-mode .hero-total { font-size: 20px; }
+      .pdf-mode .hero-total { font-size: 18px; }
+      .pdf-mode .hero-total.text-sm-fit { font-size: 15px; }
+      .pdf-mode .hero-total.text-xs-fit { font-size: 13px; }
       .pdf-mode .items-table-wrap { margin-top: 24px; }
       .pdf-mode .items-table th { padding: 10px 14px; }
       .pdf-mode .items-table td { padding: 10px 14px; }
       .pdf-mode .notes-summary-grid { margin-top: 22px; gap: 22px; grid-template-columns: 1fr 300px; }
       .pdf-mode .summary-lines { gap: 8px; font-size: 12px; }
       .pdf-mode .due-box { padding: 12px; }
-      .pdf-mode .due-total { font-size: 20px; }
+      .pdf-mode .due-total { font-size: 18px; }
+      .pdf-mode .due-total.text-sm-fit { font-size: 15px; }
+      .pdf-mode .due-total.text-xs-fit { font-size: 13px; }
       .pdf-mode .bank-signature-grid { margin-top: 22px; padding-top: 18px; gap: 22px; }
       .pdf-mode .signature-line { height: 44px; }
       .print-only { display: none; }
@@ -192,14 +196,14 @@
                 <div class="project-card border border-orange-100 bg-orange-50/70 p-5">
                   <p class="text-xs font-black uppercase tracking-[.18em] text-orange-400">Project Billing</p>
                   <p id="pProjectServices" class="project-copy mt-3 text-sm leading-6 text-slate-600"></p>
-                  <div class="mt-5 grid grid-cols-2 gap-3 text-sm">
-                    <div>
+                  <div class="mt-5 grid grid-cols-2 gap-x-2 gap-y-3 text-sm">
+                    <div class="min-w-0">
                       <p class="text-xs font-bold uppercase text-slate-400">Final Total</p>
-                      <p id="pHeroTotal" class="hero-total text-2xl font-black text-[#343a46]">₹0.00</p>
+                      <p id="pHeroTotal" class="hero-total font-black text-[#343a46]" style="font-size:clamp(14px, 4.5vw, 24px); line-height:1.2; word-break:break-word;">₹0.00</p>
                     </div>
-                    <div>
+                    <div class="min-w-0">
                       <p class="text-xs font-bold uppercase text-slate-400">Pending / Due</p>
-                      <p id="pHeroDue" class="hero-total text-2xl font-black text-ember">₹0.00</p>
+                      <p id="pHeroDue" class="hero-total font-black text-ember" style="font-size:clamp(14px, 4.5vw, 24px); line-height:1.2; word-break:break-word;">₹0.00</p>
                     </div>
                   </div>
                 </div>
@@ -228,15 +232,15 @@
                 </div>
                 <div class="summary-card border border-line bg-white p-5 shadow-sm">
                   <div class="summary-lines space-y-3 text-sm">
-                    <div class="flex justify-between"><span class="text-slate-500">Subtotal</span><strong id="pSubtotal">₹0.00</strong></div>
-                    <div id="pDiscountRow" class="flex justify-between"><span class="text-slate-500">Discount</span><strong id="pDiscount">- ₹0.00</strong></div>
-                    <div id="pTaxRow" class="flex justify-between"><span class="text-slate-500">GST / Tax</span><strong id="pTax">₹0.00</strong></div>
-                    <div class="flex justify-between border-t border-line pt-3"><span class="font-bold text-slate-600">Final Total</span><strong id="pFinal">₹0.00</strong></div>
-                    <div id="pAdvanceRow" class="flex justify-between"><span class="text-slate-500">Advance Paid</span><strong id="pAdvance">- ₹0.00</strong></div>
+                    <div class="flex justify-between gap-2"><span class="shrink-0 text-slate-500">Subtotal</span><strong id="pSubtotal" class="text-right min-w-0 break-words">₹0.00</strong></div>
+                    <div id="pDiscountRow" class="flex justify-between gap-2"><span class="shrink-0 text-slate-500">Discount</span><strong id="pDiscount" class="text-right min-w-0 break-words">- ₹0.00</strong></div>
+                    <div id="pTaxRow" class="flex justify-between gap-2"><span class="shrink-0 text-slate-500">GST / Tax</span><strong id="pTax" class="text-right min-w-0 break-words">₹0.00</strong></div>
+                    <div class="flex justify-between gap-2 border-t border-line pt-3"><span class="shrink-0 font-bold text-slate-600">Final Total</span><strong id="pFinal" class="text-right min-w-0 break-words">₹0.00</strong></div>
+                    <div id="pAdvanceRow" class="flex justify-between gap-2"><span class="shrink-0 text-slate-500">Advance Paid</span><strong id="pAdvance" class="text-right min-w-0 break-words">- ₹0.00</strong></div>
                     <div class="due-box mt-2 bg-[#3f4652] p-4 text-white">
-                      <div class="flex items-center justify-between">
-                        <span class="text-sm font-bold text-white/70">Pending / Due Amount</span>
-                        <strong id="pDueAmount" class="due-total text-2xl">₹0.00</strong>
+                      <div class="flex items-center justify-between gap-2">
+                        <span class="shrink-0 text-sm font-bold text-white/70">Pending / Due</span>
+                        <strong id="pDueAmount" class="due-total text-right min-w-0 break-words" style="font-size:clamp(16px, 5vw, 24px); line-height:1.2;">₹0.00</strong>
                       </div>
                     </div>
                   </div>

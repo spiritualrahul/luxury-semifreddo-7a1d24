@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>IgniteX Solution Invoice Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              ember: "#ff5a1f",
+              coal: "#171717",
+              ink: "#202124",
+              mist: "#f6f7f9",
+              line: "#e7e9ee",
+            },
+            fontFamily: {
+              sans: ["Inter", "ui-sans-serif", "system-ui", "Segoe UI", "Arial"],
+            },
+            boxShadow: {
+              panel: "0 18px 60px rgba(17, 24, 39, 0.08)",
+              paper: "0 24px 80px rgba(15, 23, 42, 0.12)",
+            },
+          },
+        },
+      };
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <style>
+      * { box-sizing: border-box; }
+      body { font-family: Inter, system-ui, sans-serif; }
+      input, textarea, select { outline: none; }
+      .field {
+        width: 100%;
+        border: 1px solid #e7e9ee;
+        background: #fff;
+        border-radius: 12px;
+        padding: 10px 12px;
+        font-size: 13px;
+        color: #202124;
+        transition: border .2s, box-shadow .2s;
+      }
+      .field:focus {
+        border-color: #ff5a1f;
+        box-shadow: 0 0 0 4px rgba(255, 90, 31, .1);
+      }
+      .label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+        color: #667085;
+      }
+      .section-card {
+        border: 1px solid #e7e9ee;
+        background: rgba(255,255,255,.88);
+        border-radius: 18px;
+        padding: 18px;
+        box-shadow: 0 12px 40px rgba(17,24,39,.05);
+      }
+      .section-title {
+        font-size: 14px;
+        font-weight: 800;
+        color: #171717;
+        margin-bottom: 14px;
+      }
+      .invoice-paper {
+        width: 794px;
+        min-height: 1123px;
+        background: white;
+      }
+      .pdf-mode.invoice-paper {
+        min-height: auto;
+        height: 1123px;
+      }
+      .pdf-mode .invoice-inner { padding: 28px; }
+      .pdf-mode .brand-logo { width: 245px; }
+      .pdf-mode .company-lines { margin-top: 10px; font-size: 11px; line-height: 1.45; }
+      .pdf-mode .invoice-title { font-size: 40px; }
+      .pdf-mode .invoice-meta { margin-top: 12px; font-size: 12px; }
+      .pdf-mode .client-project-grid { margin-top: 26px; gap: 18px; }
+      .pdf-mode .client-card,
+      .pdf-mode .project-card,
+      .pdf-mode .summary-card { padding: 14px; }
+      .pdf-mode .project-copy,
+      .pdf-mode .notes-copy,
+      .pdf-mode .bank-copy { font-size: 12px; line-height: 1.45; }
+      .pdf-mode .hero-total { font-size: 20px; }
+      .pdf-mode .items-table-wrap { margin-top: 24px; }
+      .pdf-mode .items-table th { padding: 10px 14px; }
+      .pdf-mode .items-table td { padding: 10px 14px; }
+      .pdf-mode .notes-summary-grid { margin-top: 22px; gap: 22px; grid-template-columns: 1fr 300px; }
+      .pdf-mode .summary-lines { gap: 8px; font-size: 12px; }
+      .pdf-mode .due-box { padding: 12px; }
+      .pdf-mode .due-total { font-size: 20px; }
+      .pdf-mode .bank-signature-grid { margin-top: 22px; padding-top: 18px; gap: 22px; }
+      .pdf-mode .signature-line { height: 44px; }
+      .print-only { display: none; }
+      @media print {
+        body { background: white !important; }
+        body * { visibility: hidden; }
+        #invoicePreview, #invoicePreview * { visibility: visible; }
+        #invoicePreview {
+          position: absolute;
+          inset: 0 auto auto 0;
+          width: 100%;
+          box-shadow: none !important;
+          transform: none !important;
+        }
+        .no-print { display: none !important; }
+      }
+    </style>
+  </head>
+  <body class="min-h-screen bg-mist text-ink">
+    <datalist id="serviceSuggestions">
+      <option value="Social Media Management"></option>
+      <option value="SEO Services"></option>
+      <option value="Website Development"></option>
+      <option value="Shopify SEO"></option>
+      <option value="Branding"></option>
+      <option value="Performance Marketing"></option>
+    </datalist>
+    <main class="min-h-screen">
+      <header class="no-print sticky top-0 z-20 border-b border-line bg-white/85 backdrop-blur-xl">
+        <div class="mx-auto flex max-w-[1800px] items-center justify-between gap-4 px-5 py-4">
+          <div class="flex items-center gap-3">
+            <div class="grid h-11 w-11 place-items-center rounded-2xl bg-coal text-white shadow-lg shadow-orange-950/10">
+              <span class="text-xl font-black tracking-tight text-ember">X</span>
+            </div>
+            <div>
+              <p class="text-sm font-black tracking-tight">IgniteX Solution</p>
+              <p class="text-xs font-medium text-slate-500">Premium invoice generator</p>
+            </div>
+          </div>
+          <div class="flex flex-wrap items-center justify-end gap-2">
+            <button id="newBillTopBtn" class="rounded-xl border border-orange-200 bg-orange-50 px-4 py-2 text-sm font-bold text-ember shadow-sm transition hover:bg-orange-100">New Bill</button>
+            <button id="saveBtn" class="rounded-xl border border-line bg-white px-4 py-2 text-sm font-bold text-coal shadow-sm transition hover:border-slate-300">Save Invoice</button>
+            <button id="shareBtn" class="rounded-xl border border-line bg-white px-4 py-2 text-sm font-bold text-coal shadow-sm transition hover:border-slate-300">Share</button>
+            <button id="printBtn" class="rounded-xl border border-line bg-white px-4 py-2 text-sm font-bold text-coal shadow-sm transition hover:border-slate-300">Print</button>
+            <button id="pdfBtn" class="rounded-xl bg-coal px-4 py-2 text-sm font-bold text-white shadow-lg shadow-slate-900/15 transition hover:bg-black">Download PDF</button>
+          </div>
+        </div>
+      </header>
+
+      <section class="mx-auto grid max-w-[1800px] grid-cols-1 gap-6 px-5 py-6 xl:grid-cols-[minmax(760px,1fr)_560px]">
+        <div class="overflow-auto border border-line bg-white/60 p-4 shadow-panel">
+          <div id="invoicePreview" class="invoice-paper mx-auto overflow-hidden shadow-paper">
+              <div class="h-2 bg-gradient-to-r from-ember via-[#ff8b3d] to-[#3f4652]"></div>
+            <div class="invoice-inner p-10">
+              <div class="flex items-start justify-between gap-8">
+                <div class="flex gap-4">
+                  <div>
+                    <img src="./assets/ignitex-logo.png" alt="IgniteX Solution" class="brand-logo -ml-8 block h-auto w-72 object-contain object-left" />
+                    <div class="company-lines mt-4 space-y-1 pl-[7px] text-xs leading-5 text-slate-500">
+                      <p id="pCompanyAddress">Jamshedpur, Jharkhand, India</p>
+                      <p id="pCompanyContactWrap"><span id="pCompanyEmail">ignitexsolution@gmail.com</span><span id="pCompanyContactSep"> | </span><span id="pCompanyPhone">+91 8935860306</span></p>
+                      <p id="pCompanyWebsite">www.ignitexsolution.com</p>
+                      <p id="pCompanyGstWrap" class="hidden">GST: <span id="pCompanyGst"></span></p>
+                    </div>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <p class="invoice-title text-5xl font-black tracking-tight text-[#343a46]">Invoice</p>
+                  <span id="pStatus" class="mt-4 inline-flex bg-orange-50 px-3 py-1 text-xs font-black uppercase tracking-wide text-ember">Due</span>
+                  <div class="invoice-meta mt-5 space-y-1 text-sm">
+                    <p><span class="font-bold text-slate-500">No.</span> <span id="pInvoiceNumber" class="font-black text-coal">IX-2026-001</span></p>
+                    <p><span class="font-bold text-slate-500">Date</span> <span id="pInvoiceDate">2026-04-27</span></p>
+                    <p><span class="font-bold text-slate-500">Due</span> <span id="pDueDate">2026-05-04</span></p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="client-project-grid mt-10 grid grid-cols-2 gap-6">
+                <div class="client-card border border-line bg-slate-50 p-5">
+                  <p class="text-xs font-black uppercase tracking-[.18em] text-slate-400">Billed To</p>
+                  <h2 id="pClientName" class="mt-3 text-xl font-black text-[#343a46]">Client Name</h2>
+                  <p id="pClientCompany" class="mt-1 text-sm font-bold text-slate-600">Client Company</p>
+                  <div class="mt-3 space-y-1 text-xs leading-5 text-slate-500">
+                    <p id="pClientAddress">Client address</p>
+                    <p id="pClientEmail">client@email.com</p>
+                    <p id="pClientPhone">+91 00000 00000</p>
+                    <p id="pClientGstWrap" class="hidden">GST: <span id="pClientGst"></span></p>
+                  </div>
+                </div>
+                <div class="project-card border border-orange-100 bg-orange-50/70 p-5">
+                  <p class="text-xs font-black uppercase tracking-[.18em] text-orange-400">Project Billing</p>
+                  <p id="pProjectServices" class="project-copy mt-3 text-sm leading-6 text-slate-600"></p>
+                  <div class="mt-5 grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <p class="text-xs font-bold uppercase text-slate-400">Final Total</p>
+                      <p id="pHeroTotal" class="hero-total text-2xl font-black text-[#343a46]">₹0.00</p>
+                    </div>
+                    <div>
+                      <p class="text-xs font-bold uppercase text-slate-400">Pending / Due</p>
+                      <p id="pHeroDue" class="hero-total text-2xl font-black text-ember">₹0.00</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="items-table-wrap mt-9 overflow-hidden border border-line">
+                <table class="items-table w-full border-collapse text-left">
+                  <thead class="bg-[#3f4652] text-white">
+                    <tr>
+                      <th class="w-[42%] px-5 py-4 text-xs font-black uppercase tracking-wide">Service</th>
+                      <th class="px-5 py-4 text-xs font-black uppercase tracking-wide">Qty</th>
+                      <th class="px-5 py-4 text-xs font-black uppercase tracking-wide">Rate</th>
+                      <th class="px-5 py-4 text-right text-xs font-black uppercase tracking-wide">Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody id="pItems" class="divide-y divide-line"></tbody>
+                </table>
+              </div>
+
+              <div class="notes-summary-grid mt-8 grid grid-cols-[1fr_320px] gap-8">
+                <div class="space-y-5">
+                  <div id="pNotesWrap">
+                    <p class="text-xs font-black uppercase tracking-[.16em] text-slate-400">Notes</p>
+                    <p id="pNotes" class="notes-copy mt-2 whitespace-pre-line text-sm leading-6 text-slate-600">Thank you for choosing IgniteX Solution.</p>
+                  </div>
+                </div>
+                <div class="summary-card border border-line bg-white p-5 shadow-sm">
+                  <div class="summary-lines space-y-3 text-sm">
+                    <div class="flex justify-between"><span class="text-slate-500">Subtotal</span><strong id="pSubtotal">₹0.00</strong></div>
+                    <div id="pDiscountRow" class="flex justify-between"><span class="text-slate-500">Discount</span><strong id="pDiscount">- ₹0.00</strong></div>
+                    <div id="pTaxRow" class="flex justify-between"><span class="text-slate-500">GST / Tax</span><strong id="pTax">₹0.00</strong></div>
+                    <div class="flex justify-between border-t border-line pt-3"><span class="font-bold text-slate-600">Final Total</span><strong id="pFinal">₹0.00</strong></div>
+                    <div id="pAdvanceRow" class="flex justify-between"><span class="text-slate-500">Advance Paid</span><strong id="pAdvance">- ₹0.00</strong></div>
+                    <div class="due-box mt-2 bg-[#3f4652] p-4 text-white">
+                      <div class="flex items-center justify-between">
+                        <span class="text-sm font-bold text-white/70">Pending / Due Amount</span>
+                        <strong id="pDueAmount" class="due-total text-2xl">₹0.00</strong>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="bank-signature-grid mt-9 grid grid-cols-2 gap-8 border-t border-line pt-7">
+                <div id="pBankWrap">
+                  <p class="text-xs font-black uppercase tracking-[.16em] text-slate-400">Bank Details</p>
+                  <div class="bank-copy mt-3 space-y-1 text-sm leading-6 text-slate-600">
+                    <p id="pBankNameWrap"><strong>Bank Name:</strong> <span id="pBankName">Jharkhand Gramin Bank (Vananchal Gramin Bank)</span></p>
+                    <p id="pAccountHolderWrap"><strong>Account Holder:</strong> <span id="pAccountHolder">IGNITEX SOLUTION</span></p>
+                    <p id="pAccountNumberWrap"><strong>Account Number:</strong> <span id="pAccountNumber">84075492148</span></p>
+                    <p id="pIfscWrap"><strong>IFSC:</strong> <span id="pIfsc">SBIN0RRVCGB</span></p>
+                    <p id="pBankBranchWrap"><strong>Branch:</strong> <span id="pBankBranch">Rajnagar</span></p>
+                    <p id="pUpiWrap"><strong>UPI:</strong> <span id="pUpi">ignitex@upi</span></p>
+                  </div>
+                </div>
+                <div class="flex flex-col items-end justify-end">
+                  <div class="signature-line flex h-16 w-56 items-end justify-center border-b border-slate-300">
+                    <img id="pSignature" alt="Authorized signature" class="hidden max-h-14 max-w-52 object-contain" />
+                  </div>
+                  <p class="mt-3 text-sm font-black text-[#343a46]">Authorized Signature</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <aside class="no-print h-[calc(100vh-104px)] overflow-auto rounded-[26px] border border-line bg-white p-5 shadow-panel">
+          <div class="mb-5 flex items-start justify-between gap-4">
+            <div>
+              <h2 class="text-xl font-black tracking-tight text-coal">Billing Studio</h2>
+              <p class="mt-1 text-sm text-slate-500">Edit once. Preview updates instantly.</p>
+            </div>
+            <button id="resetBtn" class="rounded-xl bg-orange-50 px-3 py-2 text-xs font-black text-ember transition hover:bg-orange-100">Reset</button>
+          </div>
+
+          <div class="space-y-4">
+            <section class="section-card">
+              <div class="mb-4 flex items-start justify-between gap-3">
+                <div>
+                  <h3 class="section-title mb-1">Invoice Records</h3>
+                  <p id="autosaveStatus" class="text-xs font-semibold text-slate-500">Autosaved</p>
+                </div>
+                <button id="newBillBtn" class="rounded-xl bg-coal px-3 py-2 text-xs font-black text-white">New Bill</button>
+              </div>
+              <label>
+                <span class="label">Open Saved Bill / Draft</span>
+                <select class="field" id="invoiceSelect"></select>
+              </label>
+              <p class="mt-3 text-xs leading-5 text-slate-500">Every edit is saved automatically, even if the invoice is incomplete. Select an old bill here to modify it later.</p>
+            </section>
+
+            <section class="section-card">
+              <h3 class="section-title">Invoice Details</h3>
+              <div class="grid grid-cols-2 gap-3">
+                <label><span class="label">Invoice Number</span><input class="field" id="invoiceNumber" /></label>
+                <label><span class="label">Status</span><select class="field" id="paymentStatus"><option>Due</option><option>Partial</option><option>Paid</option></select></label>
+                <label><span class="label">Invoice Date</span><input class="field" type="date" id="invoiceDate" /></label>
+                <label><span class="label">Due Date</span><input class="field" type="date" id="dueDate" /></label>
+              </div>
+            </section>
+
+            <section class="section-card">
+              <h3 class="section-title">Client Details</h3>
+              <div class="grid grid-cols-2 gap-3">
+                <label><span class="label">Client Name</span><input class="field" id="clientName" /></label>
+                <label><span class="label">Company Name</span><input class="field" id="clientCompany" /></label>
+                <label class="col-span-2"><span class="label">Client Address</span><textarea class="field min-h-20" id="clientAddress"></textarea></label>
+                <label><span class="label">Client Email</span><input class="field" id="clientEmail" /></label>
+                <label><span class="label">Client Phone</span><input class="field" id="clientPhone" /></label>
+                <label class="col-span-2"><span class="label">GST Number</span><input class="field" id="clientGst" /></label>
+              </div>
+            </section>
+
+            <section class="section-card">
+              <div class="mb-4 flex items-center justify-between">
+                <h3 class="section-title mb-0">Billing Items</h3>
+                <button id="addItemBtn" class="rounded-xl bg-coal px-3 py-2 text-xs font-black text-white">Add Row</button>
+              </div>
+              <div id="itemsForm" class="space-y-3"></div>
+            </section>
+
+            <section class="section-card">
+              <h3 class="section-title">Pricing Summary</h3>
+              <div class="grid grid-cols-2 gap-3">
+                <label><span class="label">Discount Type</span><select class="field" id="discountType"><option value="percent">Percentage</option><option value="fixed">Fixed Amount</option></select></label>
+                <label><span class="label">Discount</span><input class="field" type="number" min="0" id="discountValue" /></label>
+                <label class="col-span-2 flex items-center gap-3 rounded-2xl border border-line bg-slate-50 px-3 py-3">
+                  <input id="applyTax" type="checkbox" class="h-4 w-4 accent-[#ff5a1f]" />
+                  <span class="text-sm font-bold text-coal">Apply GST / Tax to this invoice</span>
+                </label>
+                <label><span class="label">GST / Tax %</span><input class="field" type="number" min="0" id="taxRate" /></label>
+                <label><span class="label">Advance Paid</span><input class="field" type="number" min="0" id="advancePaid" /></label>
+              </div>
+            </section>
+
+            <section class="section-card">
+              <h3 class="section-title">Payment & Notes</h3>
+              <div class="grid grid-cols-2 gap-3">
+                <label class="col-span-2"><span class="label">Notes</span><textarea class="field min-h-20" id="notes"></textarea></label>
+                <label class="col-span-2">
+                  <span class="label">Upload Signature</span>
+                  <input class="field file:mr-4 file:rounded-lg file:border-0 file:bg-coal file:px-3 file:py-2 file:text-xs file:font-black file:text-white" id="signatureUpload" type="file" accept="image/*" />
+                </label>
+                <label class="col-span-2"><span class="label">Bank Name</span><input class="field" id="bankName" /></label>
+                <label class="col-span-2"><span class="label">Account Holder Name</span><input class="field" id="accountHolder" /></label>
+                <label><span class="label">Account Number</span><input class="field" id="accountNumber" /></label>
+                <label><span class="label">IFSC Code</span><input class="field" id="ifsc" /></label>
+                <label class="col-span-2"><span class="label">Branch</span><input class="field" id="bankBranch" /></label>
+                <label class="col-span-2"><span class="label">UPI ID</span><input class="field" id="upi" /></label>
+              </div>
+            </section>
+          </div>
+        </aside>
+      </section>
+    </main>
+
+    <script src="./script.js"></script>
+  </body>
+</html>
